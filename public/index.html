@@ -1,87 +1,186 @@
 <!DOCTYPE html>
 <html lange="en">
-  <head>
+  <head><h1><center>Brand Jam</center></h1>
     <script
       type="text/javascript"
       src="https://sandbox.web.squarecdn.com/v1/square.js"
     ></script>
+    <script> 
+    const appId = 'sandbox-sq0idb-LqEW1sRikDg5rzR01oBfLA';
+    const locationId = 'LAFPMNFBB8WZT';
+    async function initializeCard(payments) {
+    const card = await payments.card();
+    await card.attach('#card-container'); 
+    return card;
+    }
+     // Call this function to send a payment token, buyer name, and other details
+    // to the project server code so that a payment can be created with 
+    // Payments API
+    async function createPayment(token) {
+    document.getElementById("token").innerHTML = token;
+    const body = JSON.stringify({
+     locationId,
+     sourceId: token,
+    });
+    const paymentResponse = await fetch('/payment', {
+     method: 'POST',
+     headers: {
+       'Content-Type': 'application/json',
+     },
+     body,
+    });
+    if (paymentResponse.ok) {
+     return paymentResponse.json();
+    }
+    const errorBody = await paymentResponse.text();
+    throw new Error(errorBody);
+    }
+
+ // This function tokenizes a payment method. 
+ // The ‘error’ thrown from this async function denotes a failed tokenization,
+ // which is due to buyer error (such as an expired card). It is up to the
+ // developer to handle the error and provide the buyer the chance to fix
+ // their mistakes.
+    async function tokenize(paymentMethod) {
+    const tokenResult = await paymentMethod.tokenize();
+    if (tokenResult.status === 'OK') {
+     return tokenResult.token;
+    } else {
+     let errorMessage = `Tokenization failed-status: ${tokenResult.status}`;
+     if (tokenResult.errors) {
+       errorMessage += ` and errors: ${JSON.stringify(
+         tokenResult.errors
+       )}`;
+     }
+     throw new Error(errorMessage);
+    }
+    }
+
+
+ // Helper method for displaying the Payment Status on the screen.
+ // status is either SUCCESS or FAILURE;
+  function displayPaymentResults(status) {
+   const statusContainer = document.getElementById(
+     'payment-status-container'
+   );
+   if (status === 'SUCCESS') {
+     statusContainer.classList.remove('is-failure');
+     statusContainer.classList.add('is-success');
+   } else {
+     statusContainer.classList.remove('is-success');
+     statusContainer.classList.add('is-failure');
+   }
+
+   statusContainer.style.visibility = 'visible';
+  }    
+
+
+    document.addEventListener('DOMContentLoaded', async function () {
+    if (!window.Square) {
+      throw new Error('Square.js failed to load properly');
+    }
+    const payments = window.Square.payments(appId, locationId);
+    let card;
+    try {
+      card = await initializeCard(payments);
+    } catch (e) {
+      console.error('Initializing Card failed', e);
+      return;
+    }
+
+     async function handlePaymentMethodSubmission(event, paymentMethod) {
+   event.preventDefault();
+
+   try {
+     // disable the submit button as we await tokenization and make a
+     // payment request.
+     cardButton.disabled = true;
+     const token = await tokenize(paymentMethod);
+     const paymentResults = await createPayment(token);
+     displayPaymentResults('SUCCESS');
+
+     console.debug('Payment Success', paymentResults);
+   } catch (e) {
+     cardButton.disabled = false;
+     displayPaymentResults('FAILURE');
+     console.error(e.message);
+   }
+ }
+  async function createCustomers() {
+          const givenName = document.getElementById("fname").value;
+          const familyName = document.getElementById("lname").value;
+          const emailAddress = document.getElementById("email").value;
+          const addressLine1 = document.getElementById("add1").value;
+          const addressLine2 = document.getElementById("add2").value;
+          const city = document.getElementById("city").value;
+          const locality = document.getElementById("locality").value;
+          const postalCode = document.getElementById("locality").value;
+          const country = document.getElementById("country").value;
+
+
+          try {
+          const response = await client.customersApi.createCustomer({
+            givenName: givenName,
+            familyName: familyName,
+            emailAddress: emailAddress,
+            address: {
+              addressLine1: addressLine1,
+              addressLine2: addressLine2,
+              locality: locality,
+              postalCode: postalCode,
+              country: country
+            },
+            referenceId: 'test-1',
+            });
+
+            console.log(response.result);
+          } catch(error) {
+            console.log(error);
+          }
+          }
+
+ const cardButton = document.getElementById(
+   'card-button'
+ );
+ cardButton.addEventListener('click', async function (event) {
+   await handlePaymentMethodSubmission(event, card);
+ });
+  cardButton.addEventListener('click', createCustomers());
+
+      });
+
+
+    </script>
     <meta charset="utf-8" />
     <title>Square Web Payments Quickstart</title>
     <link href="app.css" rel="stylesheet" />
   </head>
 
   <body>
-    <div id="landing-page-layout">
-      <h2 id="its-working">It's working!</h2>
-      <h1>Welcome to the Web Payments SDK Quickstart</h1>
-      <p>
-        To get started, we recommend following our
-        <a target="_blank" href="/">Quickstart guide</a>.
-      </p>
-      <p>
-        If you need more detail on a method or object, we also have a
-        <a
-          target="_blank"
-          href="https://developer.squareup.com/reference/sdks/web/payments"
-          >technical reference</a
-        >.
-      </p>
-
-      <div id="example-container">
-        <h3>Examples</h3>
-        <p>
-          These example implementations can be used as a reference or as the
-          base for your own implementation. For these to work, you'll need to
-          set your
-          <a target="_blank" href="https://developer.squareup.com/apps"
-            >applicationId and locationId</a
-          >.
-        </p>
-        <ul id="example-list">
-          <li>
-            <a href="/examples/card.html">Card Payments</a>
-          </li>
-          <li>
-            <a href="/examples/card-payment-with-verification.html"
-              >Card Payments with SCA</a
-            >
-          </li>
-          <li>
-            <a href="/examples/card-on-file-with-verification.html"
-              >Card on File with SCA</a
-            >
-          </li>
-          <li>
-            <a href="/examples/payment-with-card-on-file-and-verification.html"
-              >Payments with Card on File and SCA</a
-            >
-          </li>
-          <li>
-            <a href="/examples/apple-pay.html">Apple Pay</a>
-          </li>
-          <li>
-            <a href="/examples/google-pay.html">Google Pay</a>
-          </li>
-          <li>
-            <a href="/examples/payment-request.html">Payment Request</a>
-          </li>
-          <li>
-            <a href="/examples/ach.html">ACH Bank Transfer</a>
-          </li>
-          <li>
-            <a href="/examples/gift-card.html">Gift Card Payments</a>
-          </li>
-          <li>
-            <a href="/examples/afterpay.html">Afterpay/Clearpay</a>
-          </li>
-          <li>
-            <a href="/examples/card-styling-simple.html">Card Styling</a>
-          </li>
-          <li>
-            <a href="/examples/cash-app-pay.html">Cash App Pay</a>
-          </li>
-        </ul>
-      </div>
-    </div>
+     <form id="payment-form">
+    <div id="cardholder-info"><label for="fname">First Name:</label><br>
+    <input type="text" id="fname" name="fname"><br>
+    <label for="lname">Last Name:</label><br>
+    <input type="text" id="lname" name="lname">
+    <label for="add1">Billing Address 1:</label><br>
+    <input type="text" id="add1" name="add1"><br>
+    <label for="add2">Billing Address 2:</label><br>
+    <input type="text" id="add2" name="add2"><br>
+    <label for="city">City:</label><br>
+    <input type="text" id="city" name="city"><br>
+    <label for="locality">State/Providence:</label><br>
+    <input type="text" id="locality" name="locality"><br>
+    <label for="country">Country:</label><br>
+    <select id="country" name="country">
+        <option value = "U.S.A.">U.S.A.</option>
+        <option value = "Canada">Canada</option>
+    </select><br>
+    <label for="email">Email:</label><br>
+    <input type="email" id="email" name="email"></div>
+   <div id="card-container"></div>
+   <button id="card-button" type="button">Submit Card Info</button>
+ </form>
+ <div id="payment-status-container"></div>
+ <div><h1 id="token"></h1></div>
   </body>
 </html>

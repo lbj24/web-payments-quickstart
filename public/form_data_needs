@@ -1,0 +1,85 @@
+Needed to Create Customer:
+	givenName: 'Amelia', -form
+    familyName: 'Earhart', -form
+    emailAddress: 'Amelia.Earhart@example.com', -form
+    address: {
+      addressLine1: '500 Electric Ave', -form
+      addressLine2: 'Suite 600', -form
+      locality: 'New York', -form
+      administrativeDistrictLevel1: 'NY', -form
+      postalCode: '10003', -card info
+      country: 'US' -form
+    },
+    phoneNumber: '1-212-555-4240', -form
+    referenceId: '{YOUR_REFERENCE_ID}', -we generate
+    note: 'a customer' -not needed
+  });
+
+Create Customer Return:
+	"customer": {
+    "id": "Q6VKKKGW8GWQNEYMDRMV01QMK8",
+    "created_at": "2021-03-31T18:27:07.803Z",
+    "updated_at": "2021-03-31T18:27:07Z",
+    "given_name": "Amelia",
+    "family_name": "Earhart",
+    "email_address": "Amelia.Earhart@example.com",
+    "preferences": {
+      "email_unsubscribed": false
+    },
+    "creation_source": "THIRD_PARTY"
+  }
+
+Needed to Save Card on File:
+	idempotencyKey: '{UNIQUE_KEY}', -we generate see idempotency on sq dev
+    sourceId: '{CARD_TOKEN}', -token from card info
+    card: {
+      cardholderName: 'Amelia Earhart', -concat(givenName&familyName)
+      billingAddress: {
+        addressLine1: '500 Electric Ave', -form
+        addressLine2: 'Suite 600', -form
+        locality: 'New York', -form
+        administrativeDistrictLevel1: 'NY', -form
+        postalCode: '10003', -card info
+        country: 'US' -form
+      },
+      customerId: 'Q6VKKKGW8GWQNEYMDRMV01QMK8', -"id" in Create Customer Return
+      referenceId: '{YOUR_REFERENCE_ID}'
+    }
+
+Create Card Return:
+	"card": {
+	    "id": "ccof:uIbfJXhXETSP197M3GB",
+	    "billing_address": {
+	      "address_line_1": "500 Electric Ave",
+	      "address_line_2": "Suite 600",
+	      "locality": "New York",
+	      "administrative_district_level_1": "NY",
+	      "postal_code": "10003",
+	      "country": "US"
+	    },
+	    "bin": "411111",
+	    "card_brand": "VISA",
+	    "card_type": "CREDIT",
+	    "cardholder_name": "Amelia Earhart",
+	    "customer_id": "Q6VKKKGW8GWQNEYMDRMV01QMK8",
+	    "enabled": true,
+	    "exp_month": 11,
+	    "exp_year": 2024,
+	    "last_4": "1111",
+	    "prepaid_type": "NOT_PREPAID",
+	    "reference_id": "user-id-1",
+	    "version": 1
+	  }
+
+Needed to Submit Payment:
+	sourceId: 'ccof:uIbfJXhXETSP197M3GB', -"id" from Create Card return
+    idempotencyKey: '4935a656-a929-4792-b97c-8848be85c27c', -we generate
+    amountMoney: {
+      amount: 200, -from google form
+      currency: 'USD' -we set this variable
+    },
+    autocomplete: true, -we set this
+    customerId: 'Q6VKKKGW8GWQNEYMDRMV01QMK8', -"id" from Create Customer return
+    locationId: 'XK3DBG77NJBFX', -from sq dev account
+    referenceId: '123456' -customer refernce id we made
+    });
